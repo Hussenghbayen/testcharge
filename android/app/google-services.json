@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "538501632651",
+    "project_id": "charging-point-d964c",
+    "storage_bucket": "charging-point-d964c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:538501632651:android:ad623021394ac9f64c3a8e",
+        "android_client_info": {
+          "package_name": "com.example.testcharge"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "538501632651-g2uc8mt9qcbndjmov4r79d4tq3pbv5vi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByg7eiogncrpWhEn-CLbV3WsoszIt1p2g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "538501632651-g2uc8mt9qcbndjmov4r79d4tq3pbv5vi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
