@@ -27,8 +27,8 @@ This leads to calculation errors, lost records, and difficulty knowing the shop'
 
 The latest APK build is available directly in this repository:
 
-[⬇️ Download the App (APK)](assets/testcharge-release.apk)
-
+[[⬇️ Download the App (APK)](assets/testcharge-release.apk)
+](https://github.com/Hussenghbayen/testcharge/releases/tag/v1.0.0)
 ## Team Members and Roles
 
 | Name | Role | Areas of Responsibility |
