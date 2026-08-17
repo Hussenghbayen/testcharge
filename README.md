@@ -11,7 +11,7 @@
 
 ## Demo Video و APK
 
-- فيديو عرض توضيحي: https://youtu.be/iguguW1MXZ4
+- فيديو عرض توضيحي: https://www.youtube.com/watch?v=hz_H-9GRAak
 - تحميل آخر نسخة APK: من [GitHub Releases](../../releases) لهذا المستودع
 
 ---
