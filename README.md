@@ -1,216 +1,37 @@
-# TestCharge — Mobile Device Charging Shop Management App
+# TestCharge
 
-A Flutter app for managing mobile phone/device charging shops: recording charging and sale transactions, tracking occupied shelves, managing customer debts and balances, and daily/weekly/monthly income reports.
+نظام موبايل لإدارة محلات شحن الأجهزة المحمولة — يساعد أصحاب المحلات على متابعة عمليات الشحن،
+الرفوف المشغولة، المبيعات، ديون العملاء، الدفعات، والتقارير المالية من تطبيق واحد.
 
-The backend is a separate service hosted on Render, with authentication handled via Firebase Auth.
-
-## The Problem
-
-Owners of mobile device charging shops (which also sell related accessories) used to rely on paper notebooks or generic, non-specialized apps to track:
-
-- Which device is on which shelf, when it was received, and when it's due for pickup
-- How much debt each customer has, and how much they've paid
-- Daily/weekly/monthly income from charging services versus direct sales
-
-This leads to calculation errors, lost records, and difficulty knowing the shop's real-time financial status. **TestCharge** solves this with a mobile app built specifically for this type of shop.
-
-## What the App Offers
-
-- Recording device charging transactions and tracking their status (in progress / delivered)
-- Managing shelves and linking each device to an occupied shelf
-- Recording direct sales of products and accessories
-- Managing customer debts: recording debt, partial payments, debt settlement
-- Daily/weekly/monthly income reports that separate charging income from sales income
-- Secure sign-in via Firebase (Email/Password or Google)
-
-## Download the App
-
-The latest APK build is available directly in this repository:
-
-[[⬇️ Download the App (APK)](assets/testcharge-release.apk)
-](https://github.com/Hussenghbayen/testcharge/releases/tag/v1.0.0)
-## Team Members and Roles
-
-| Name | Role | Areas of Responsibility |
-|---|---|---|
-| Hussein Ezzat Hussein Ghbayen | Flutter / Frontend | Authentication screens, Router |
-| Hussein Ezzat Hussein Ghbayen | Flutter / State Management | Cubits, ApiClient |
-| Mahmoud Madi | Backend | API, database, access permissions |
-| Mohammad Mahdi | UI/UX + Testing | Figma, automated tests |
-
-## Tech Stack
-
-**Frontend (this repository):**
-- Flutter 3.x / Dart — SDK: ^3.10.7
-- flutter_bloc (Cubit) — state management
-- http — network layer (unified via ApiClient)
-- firebase_auth + firebase_core — authentication
-- google_sign_in — Google sign-in
-- flutter_dotenv — environment configuration (.env)
-- equatable — Bloc state comparison
-- bloc_test + mocktail — testing (dev)
-
-**Backend (separate repository — see Project Links):**
-- API hosted on Render: `https://charging-api-tkne.onrender.com/api`
-- Authentication: Firebase Auth (Bearer ID Token verified on every request)
-
-## Architecture
-
-A simple layered architecture within Flutter:
-
-```
-lib/
-├── main.dart                 # Entry point: load .env, initialize Firebase, MultiBlocProvider
-├── app_router.dart           # All routes (onGenerateRoute)
-│
-├── data/
-│   ├── network/
-│   │   ├── api_client.dart       # Unified HTTP client (single baseUrl, unified error handling)
-│   │   └── api_exceptions.dart   # NetworkException / UnauthorizedException / ValidationException ...
-│   └── Models/                   # Data models (Product, DeviceModel)
-│
-├── logic/                    # Cubits (state management) — one folder per feature
-│   ├── auth_cubit/
-│   ├── customers/
-│   ├── dashboard/
-│   ├── devices/
-│   ├── products/
-│   ├── shelves/
-│   ├── transactions/
-│   └── balance/               # BalanceCalculator — pure Dart logic, testable in isolation
-│
-├── presentation/screens/     # Screens, organized by feature (auth, debt, devices, history, ...)
-│
-├── widgets/                  # Shared components (DepositDialog, BottomSheets, ...)
-└── utils/                    # Theme and general helper utilities
-```
-
-**Data flow:**
-Screen (UI) → calls Cubit → Cubit calls ApiClient → ApiClient attaches the Firebase token and checks statusCode before decoding JSON → throws a classified exception (the appropriate ApiException subclass) on failure → Cubit catches it and maps it to a State → Screen rebuilds via BlocBuilder/BlocConsumer.
-
-Financial calculation logic (debt, balance, partial payments, debt settlement) is fully isolated in `lib/logic/balance/balance_calculator.dart` — pure Dart with no dependency on Flutter or the network, making it directly testable (see `test/logic/balance_calculator_test.dart`).
-
-## Prerequisites
-
-- Flutter SDK (stable channel, compatible with Dart ^3.10.7)
-- A Firebase account with a project that has Authentication enabled (Email/Password + Google Sign-In)
-- `google-services.json` (Android) and/or `GoogleService-Info.plist` (iOS) from the same Firebase project
-- Access to the backend (running remotely or locally) — see Project Links
-
-## Getting Started
-
-```bash
-# 1) Clone the repository
-git clone https://github.com/Hussenghbayen/testcharge.git
-cd testcharge
-
-# 2) Install dependencies
-flutter pub get
-
-# 3) Set up environment variables (see next section)
-cp .env.example .env
-# then edit .env with the real values
-
-# 4) Set up Firebase (see next section) — google-services.json / GoogleService-Info.plist
-
-# 5) Run
-flutter run
-```
-
-## Firebase Setup
-
-1. Create a project on Firebase Console
-2. Enable Authentication → sign-in methods: Email/Password and Google
-3. **Android**: Add an Android app with the same `applicationId` found in `android/app/build.gradle.kts`, download `google-services.json`, and place it in `android/app/`
-4. **iOS**: Add an iOS app with the same Bundle ID found in `ios/Runner.xcodeproj`, download `GoogleService-Info.plist`, and place it in `ios/Runner/`
-5. From project settings (Project Settings → General), copy the Web API Key and set it in `.env` under `FIREBASE_WEB_API_KEY`
-
-> Do not commit or push the real `google-services.json` / `GoogleService-Info.plist` files to GitHub if the repository is public and contains additional sensitive data beyond the public Firebase keys.
-
-## API / Environment Setup
-
-Copy `.env.example` to `.env` (the latter is excluded from Git via `.gitignore`):
-
-```
-API_BASE_URL=https://charging-api-tkne.onrender.com/api
-FIREBASE_WEB_API_KEY=REPLACE_WITH_YOUR_FIREBASE_WEB_API_KEY
-```
-
-All network requests in the app go through a single entry point, `lib/data/network/api_client.dart`, which automatically attaches `Authorization: Bearer <Firebase ID Token>` to every protected request.
-
-## Running Tests
-
-```bash
-flutter test
-```
-
-Current tests in `test/logic/`:
-
-| File | Covers |
-|---|---|
-| `balance_calculator_test.dart` | Debt/balance calculation, partial payments, debt settlement (full/partial/overpaid), rejection of negative and zero values |
-| `customers_cubit_test.dart` | That `payDebt` rejects invalid amounts before attempting any server request |
-| `api_client_test.dart` | Distinguishing 401/403/network errors/validation errors from one another, and not crashing on a non-JSON response |
-
-> Note: Shop data isolation (preventing one shop's customer from seeing another shop's data) is primarily the backend's responsibility (owner_id from the token) — see `docs/database-schema.md`. The frontend tests here only verify that every request attaches the correct token, which the backend's isolation logic relies on.
-
-## Additional Documentation
-
-- **Postman Collection**: `docs/TestCharge.postman_collection.json` — covers all API endpoints actually consumed by the app (auth, dashboard, customers and payments, products, transactions, shelves). Import it into Postman, fill in the `firebase_web_api_key` variable, run the Login request, and copy the resulting `idToken` into the `firebase_id_token` variable.
-- **Database Schema**: `docs/database-schema.md` — an ERD (Mermaid) inferred from the actual API contracts, clarifying the shop isolation rule (owner_id) that must be enforced by the backend.
-
-## Screenshots
-
-| Login | Home | Customer Statement |
-|---|---|---|
-| ![login](docs/screenshots/login.png) | ![home](docs/screenshots/home.png) | ![customer](docs/screenshots/customer.png) |
-
-Demo video: https://youtu.be/iguguW1MXZ4
-
-## Building the App (Release Build)
-
-```bash
-# Android — APK
-flutter build apk --release
-# Output: build/app/outputs/flutter-apk/app-release.apk
-
-# Android — App Bundle (for Google Play)
-flutter build appbundle --release
-
-# iOS (requires macOS + Xcode + Apple Developer account)
-flutter build ipa --release
-```
-
-## Project Links
-
-| Item | Link |
-|---|---|
-| Backend repository | _add the actual backend repository link here_ |
-| Backend (live environment) | https://charging-api-tkne.onrender.com |
-| Graduation report (PDF) | [docs/report.pdf](docs/report.pdf) |
-| Graduation report (DOCX) | [docs/report.docx](docs/report.docx) |
-| Figma file | https://www.figma.com/design/z7EdLLqHxaxUXPiHqY20FK/Untitled |
+**مشروع تخرج** — الجامعة الإسلامية بغزة، كلية تكنولوجيا المعلومات، تخصص الحوسبة المتنقلة وتطبيقات
+الأجهزة الذكية.
+المشرف/المناقش: د. رائد بلبل.
 
 ---
+
+## Demo Video و APK
+
+- فيديو عرض توضيحي: https://youtu.be/iguguW1MXZ4
+- تحميل آخر نسخة APK: من [GitHub Releases](../../releases) لهذا المستودع
+
 ---
 
-# TestCharge — تطبيق إدارة محلات شحن الأجهزة ومبيعاتها
+## Problem Statement
 
-تطبيق Flutter لإدارة محلات شحن الهواتف/الأجهزة المحمولة: تسجيل عمليات الشحن والبيع، متابعة الرفوف (الشيلفات) المشغولة، إدارة ديون وأرصدة العملاء، وتقارير الدخل اليومية/الأسبوعية/الشهرية.
-
-الباك اند منفصل ومستضاف على Render، والمصادقة عبر Firebase Auth.
-
-## المشكلة
-
-أصحاب محلات شحن الأجهزة المحمولة (وبيع الإكسسوارات المرافقة) كانوا يعتمدون على دفاتر ورقية أو تطبيقات عامة غير متخصصة لتتبّع:
+بعض محلات شحن الأجهزة المحمولة الصغيرة تعتمد على التسجيل الورقي أو حلول عامة غير متخصصة لمتابعة:
 
 - أي جهاز موجود على أي رف، ومتى استُلم، ومتى يجب تسليمه
-- كم بقي على كل عميل من دين، وكم دفع
+- ديون العملاء والدفعات الجزئية
 - الدخل اليومي/الأسبوعي/الشهري من الشحن مقابل البيع المباشر
 
-هذا يؤدي لأخطاء حسابية، ضياع سجلات، وصعوبة في معرفة الوضع المالي للمحل لحظياً. **TestCharge** يحل هذا بتطبيق موبايل مخصص لهذا النوع من المحلات تحديداً.
+هذا النوع من الحلول يزيد احتمال الأخطاء الحسابية وضياع السجلات، ويصعّب معرفة الوضع المالي للمحل
+لحظياً. *(ملاحظة: هذا وصف لمشكلة شائعة في هذا النوع من المحلات بناءً على الملاحظة العامة للفريق،
+وليس نتيجة استبيان أو مقابلات ميدانية موثّقة رسمياً — إذا أُجريت مقابلات فعلية مع أصحاب محلات، يجب
+ذكر ذلك هنا وبالتقرير مع تفاصيلها.)*
 
-## ماذا يقدّم التطبيق
+## Proposed Solution
+
+**TestCharge** تطبيق موبايل مخصص لهذا النوع من المحلات تحديداً، يوفّر:
 
 - تسجيل عمليات شحن الأجهزة ومتابعة حالتها (قيد الشحن / تم التسليم)
 - إدارة الرفوف (الشيلفات) وربط كل جهاز برف مشغول
@@ -219,81 +40,87 @@ flutter build ipa --release
 - تقارير دخل يومية/أسبوعية/شهرية تفصل بين دخل الشحن ودخل البيع
 - تسجيل دخول آمن عبر Firebase (Email/Password أو Google)
 
-## تحميل التطبيق
+---
 
-يمكن تحميل آخر نسخة APK مباشرة من هذا المستودع:
+## صور من التطبيق
 
-[⬇️ تحميل التطبيق (APK)](assets/testcharge-release.apk)
-
-## أعضاء الفريق وأدوارهم
-
-| الاسم | الدور | الأجزاء المسؤول عنها |
+| تسجيل الدخول | الرئيسية | كشف حساب عميل |
 |---|---|---|
-| حسين عزات حسين غباين | Flutter / Frontend | شاشات المصادقة، Router |
-| حسين عزات حسين غباين | Flutter / State Management | Cubits، ApiClient |
-| محمود ماضي | Backend | API، قاعدة البيانات، صلاحيات الوصول |
-| محمد مهدي | UI/UX + اختبارات | Figma، الاختبارات الآلية |
+| ![login](docs/screenshots/login.png) | ![home](docs/screenshots/home.png) | ![customer](docs/screenshots/customer.png) |
 
-## التقنيات المستخدمة
+> ⚠️ الصور أعلاه placeholders لحد ما تُضاف سكرين شوتس حقيقية بمجلد `docs/screenshots/` — إذا ما
+> رح تضيفوها بهالمرحلة، احذفوا الجدول واعتمدوا على فيديو العرض فقط.
 
-**Frontend (هذا المستودع):**
-- Flutter 3.x / Dart — SDK: ^3.10.7
-- flutter_bloc (Cubit) — إدارة الحالة
-- http — طبقة الاتصال بالشبكة (موحّدة عبر ApiClient)
-- firebase_auth + firebase_core — المصادقة
-- google_sign_in — تسجيل دخول بحساب Google
-- flutter_dotenv — إعدادات البيئة (.env)
-- equatable — مقارنة الحالات في Bloc
-- bloc_test + mocktail — اختبارات (dev)
+---
 
-**Backend (مستودع منفصل — راجع روابط المشروع):**
-- API مستضاف على Render: `https://charging-api-tkne.onrender.com/api`
-- المصادقة: Firebase Auth (Bearer ID Token يُتحقق منه بكل طلب)
+## System Architecture
 
-## المعمارية
+```
+Flutter UI
+    ↓
+Cubit / State Management   (flutter_bloc)
+    ↓
+Data / API Layer            (ApiClient — نقطة اتصال HTTP موحّدة)
+    ↓
+REST API                    (Backend منفصل، Node/Express على Render)
+    ↓
+Database
+```
 
-بنية طبقية بسيطة (Layered Architecture) داخل Flutter:
+كل الوصول للبيانات معزول حسب المحل (`owner_id` مستخرج من Firebase ID Token يتحقق منه الباك اند
+بكل طلب — راجع `docs/database-schema.md`). التفاصيل الكاملة لتدفق البيانات موجودة بـ
+[`docs/architecture.md`](docs/architecture.md).
+
+---
+
+## Tech Stack
+
+- **Flutter / Dart** — الواجهة
+- **Firebase Authentication** — تسجيل الدخول (Email/Password + Google)
+- **Flutter Bloc / Cubit** — إدارة الحالة
+- **REST API** (HTTP) — الاتصال بالباك اند، موحّد عبر `ApiClient` واحد
+- **Render** — استضافة الباك اند
+
+<details>
+<summary>حزم إضافية (تفاصيل تقنية)</summary>
+
+- `flutter_dotenv` — إعدادات البيئة (`.env`)
+- `equatable` — مقارنة حالات Bloc
+- `bloc_test` + `mocktail` — اختبارات (dev)
+
+</details>
+
+---
+
+## Project Structure
 
 ```
 lib/
-├── main.dart                 # نقطة الدخول: تحميل .env، تهيئة Firebase، MultiBlocProvider
-├── app_router.dart           # كل الـ Routes (onGenerateRoute)
-│
-├── data/
-│   ├── network/
-│   │   ├── api_client.dart       # نقطة اتصال HTTP موحّدة (baseUrl واحد، معالجة أخطاء موحّدة)
-│   │   └── api_exceptions.dart   # NetworkException / UnauthorizedException / ValidationException ...
-│   └── Models/                   # نماذج بيانات (Product, DeviceModel)
-│
-├── logic/                    # Cubits (State Management) — كل ميزة بمجلدها
-│   ├── auth_cubit/
-│   ├── customers/
-│   ├── dashboard/
-│   ├── devices/
-│   ├── products/
-│   ├── shelves/
-│   ├── transactions/
-│   └── balance/               # BalanceCalculator — منطق نقي (Pure Dart) قابل للاختبار بمعزل عن الواجهة
-│
-├── presentation/screens/     # الشاشات، مقسّمة حسب الميزة (auth, debt, devices, history, ...)
-│
-├── widgets/                  # مكوّنات مشتركة (DepositDialog, BottomSheets, ...)
-└── utils/                    # الثيم وأدوات مساعدة عامة
+├── main.dart              # نقطة الدخول
+├── app_router.dart        # كل الـ Routes
+├── data/network/          # ApiClient موحّد + الاستثناءات المصنّفة
+├── data/Models/           # نماذج البيانات
+├── logic/                 # Cubits لكل ميزة + BalanceCalculator (منطق نقي قابل للاختبار)
+├── presentation/screens/  # الشاشات حسب الميزة
+├── widgets/                # مكوّنات مشتركة (DepositDialog, ...)
+└── utils/                  # الثيم وأدوات عامة
 ```
 
-**تدفق البيانات:**
-Screen (UI) → يستدعي Cubit → Cubit يستدعي ApiClient → ApiClient يرفق توكن Firebase ويتحقق من statusCode قبل فك الـ JSON → يرمي استثناء مصنّف (ApiException الفرعي المناسب) عند الفشل → Cubit يلتقطه ويحوّله لـ State مناسب → Screen يعيد البناء عبر BlocBuilder/BlocConsumer.
+تفاصيل أكثر (تدفق البيانات خطوة بخطوة): [`docs/architecture.md`](docs/architecture.md)
 
-منطق الحسابات المالية (الدين، الرصيد، الدفع الجزئي، تسوية الدين) مفصول بالكامل في `lib/logic/balance/balance_calculator.dart` — Pure Dart بدون أي اعتماد على Flutter أو الشبكة، مما يجعله قابلاً للاختبار مباشرة (راجع `test/logic/balance_calculator_test.dart`).
+---
 
-## المتطلبات (Prerequisites)
+## Backend / API
 
-- Flutter SDK (قناة stable، تتوافق مع Dart ^3.10.7)
-- حساب Firebase مع مشروع مفعّل عليه Authentication (Email/Password + Google Sign-In)
-- ملف `google-services.json` (Android) و/أو `GoogleService-Info.plist` (iOS) من نفس مشروع Firebase
-- اتصال بمستودع الباك اند (شغّال أو محلي) — راجع روابط المشروع
+- الباك اند مستودع منفصل: https://github.com/MohammEdeyad2001/Final-report-.git
+- بيئة التشغيل (Render): `https://charging-api-tkne.onrender.com/api`
+- المصادقة: Firebase Auth — كل طلب محمي يحمل `Authorization: Bearer <Firebase ID Token>`
+- توثيق كامل لنقاط الـ API: [`docs/TestCharge.postman_collection.json`](docs/TestCharge.postman_collection.json) (Postman)
+- مخطط قاعدة بيانات مُستنتَج من عقود الـ API: [`docs/database-schema.md`](docs/database-schema.md)
 
-## خطوات التشغيل
+---
+
+## Installation
 
 ```bash
 # 1) استنساخ المستودع
@@ -305,84 +132,104 @@ flutter pub get
 
 # 3) إعداد متغيرات البيئة (راجع القسم التالي)
 cp .env.example .env
-# ثم عدّل .env وحط القيم الحقيقية
 
-# 4) إعداد Firebase (راجع القسم التالي) — google-services.json / GoogleService-Info.plist
+# 4) إعداد Firebase — راجع القسم التالي
 
 # 5) التشغيل
 flutter run
 ```
 
-## إعداد Firebase
+### إعداد Firebase
 
-1. أنشئ مشروع على Firebase Console
-2. فعّل Authentication → طرق تسجيل الدخول: Email/Password و Google
-3. **Android**: أضف تطبيق Android بنفس `applicationId` الموجود في `android/app/build.gradle.kts`، وحمّل `google-services.json` وضعه في `android/app/`
-4. **iOS**: أضف تطبيق iOS بنفس Bundle ID الموجود في `ios/Runner.xcodeproj`، وحمّل `GoogleService-Info.plist` وضعه في `ios/Runner/`
-5. من إعدادات المشروع (Project Settings → General) انسخ Web API Key وضعه في `.env` تحت `FIREBASE_WEB_API_KEY`
+1. أنشئ مشروع على [Firebase Console](https://console.firebase.google.com/)
+2. فعّل **Authentication** → Email/Password و Google
+3. **Android**: أضف تطبيق بنفس `applicationId` من `android/app/build.gradle.kts`، حمّل
+   `google-services.json` وضعه في `android/app/`
+4. **iOS**: أضف تطبيق بنفس Bundle ID من `ios/Runner.xcodeproj`، حمّل `GoogleService-Info.plist`
+   وضعه في `ios/Runner/`
 
-> لا تعدّل أو ترفع `google-services.json` / `GoogleService-Info.plist` الحقيقيين على GitHub إذا كان المستودع عاماً وفيه بيانات حساسة إضافية غير مفاتيح Firebase العامة.
+> لا تعدّل/ترفع الملفين الحقيقيين على GitHub إذا كان المستودع عاماً.
 
-## إعداد الـ API / متغيرات البيئة
+### Building the App
 
-انسخ `.env.example` إلى `.env` (الملف الأخير مستثنى من Git عبر `.gitignore`):
-
+```bash
+flutter build apk --release        # Android APK
+flutter build appbundle --release  # Android App Bundle (Google Play)
+flutter build ipa --release        # iOS (يتطلب macOS + Xcode)
 ```
+
+---
+
+## Environment Variables
+
+انسخ `.env.example` إلى `.env` (مستثنى من Git):
+
+```env
 API_BASE_URL=https://charging-api-tkne.onrender.com/api
 FIREBASE_WEB_API_KEY=REPLACE_WITH_YOUR_FIREBASE_WEB_API_KEY
 ```
 
-كل طلبات الشبكة بالتطبيق تمر عبر نقطة اتصال واحدة `lib/data/network/api_client.dart`، وترفق تلقائياً `Authorization: Bearer <Firebase ID Token>` مع كل طلب محمي.
+---
 
-## تشغيل الاختبارات
+## Testing
 
 ```bash
 flutter test
 ```
 
-الاختبارات الموجودة حالياً في `test/logic/`:
-
 | الملف | يغطي |
 |---|---|
-| `balance_calculator_test.dart` | حساب الدين/الرصيد، الدفع الجزئي، تسوية الدين (كامل/جزئي/زائد)، رفض القيم السالبة والصفرية |
-| `customers_cubit_test.dart` | أن `payDebt` يرفض المبالغ غير الصالحة قبل أي محاولة اتصال بالسيرفر |
-| `api_client_test.dart` | تمييز 401/403/أخطاء الشبكة/أخطاء التحقق عن بعضها، وعدم انهيار التطبيق عند استجابة غير-JSON |
+| `test/logic/balance_calculator_test.dart` | حساب الدين/الرصيد، الدفع الجزئي، تسوية الدين، رفض القيم السالبة/الصفرية |
+| `test/logic/customers_cubit_test.dart` | `payDebt` يرفض المبالغ غير الصالحة قبل أي اتصال بالسيرفر |
+| `test/logic/api_client_test.dart` | تمييز 401/403/أخطاء الشبكة/أخطاء التحقق عن بعضها |
 
-> ملاحظة: عزل بيانات المحلات (منع عميل من رؤية بيانات محل تاني) هو مسؤولية الـ backend (owner_id من التوكن) بشكل أساسي — راجع `docs/database-schema.md`. اختبارات الفرونت اند هنا تتأكد فقط أن كل طلب يرفق التوكن الصحيح، وهو الأساس الذي يعتمد عليه عزل الباك اند.
+عزل بيانات المحلات هو مسؤولية الـ backend أساساً (`owner_id` من التوكن) — راجع `docs/database-schema.md`.
 
-## مستندات إضافية
+---
 
-- **Postman Collection**: `docs/TestCharge.postman_collection.json` — يغطي كل نقاط الـ API التي يستهلكها التطبيق فعلياً (المصادقة، Dashboard، العملاء والدفعات، المنتجات، العمليات، الرفوف). استورده في Postman، عبّي متغير `firebase_web_api_key`، نفّذ طلب Login، وانسخ `idToken` الناتج لمتغير `firebase_id_token`.
-- **مخطط قاعدة البيانات**: `docs/database-schema.md` — مخطط ERD (Mermaid) مُستنتَج من عقود الـ API الفعلية، مع توضيح قاعدة العزل بين المحلات (owner_id) التي يجب أن يفرضها الباك اند.
+## Team Members
 
-## صور من التطبيق
+| الاسم | الدور |
+|---|---|
+| حسين عزات حسين غباين | Flutter (Frontend + State Management: شاشات، Router، Cubits، ApiClient) |
+| محمود ماضي | Backend (API، قاعدة البيانات، صلاحيات الوصول) |
+| محمد مهدي | UI/UX + اختبارات (Figma، الاختبارات الآلية) |
 
-| تسجيل الدخول | الرئيسية | كشف حساب عميل |
-|---|---|---|
-| ![login](docs/screenshots/login.png) | ![home](docs/screenshots/home.png) | ![customer](docs/screenshots/customer.png) |
+---
 
-فيديو عرض توضيحي: https://youtu.be/iguguW1MXZ4
-
-## بناء التطبيق (Release Build)
-
-```bash
-# Android — APK
-flutter build apk --release
-# الناتج: build/app/outputs/flutter-apk/app-release.apk
-
-# Android — App Bundle (لرفعه على Google Play)
-flutter build appbundle --release
-
-# iOS (يتطلب macOS + Xcode + حساب Apple Developer)
-flutter build ipa --release
-```
-
-## روابط المشروع
+## Project Documentation
 
 | العنصر | الرابط |
 |---|---|
-| مستودع الباك اند | _يُضاف رابط مستودع الباك اند الفعلي هنا_ |
-| الباك اند (بيئة التشغيل) | https://charging-api-tkne.onrender.com |
-| تقرير التخرج (PDF) | [docs/report.pdf](docs/report.pdf) |
-| تقرير التخرج (DOCX) | [docs/report.docx](docs/report.docx) |
+| تقرير التخرج | ⚠️ _أضيفوا الرابط أو الملف هنا_ |
 | ملف Figma | https://www.figma.com/design/z7EdLLqHxaxUXPiHqY20FK/Untitled |
+| Postman Collection | [`docs/TestCharge.postman_collection.json`](docs/TestCharge.postman_collection.json) |
+| مخطط قاعدة البيانات | [`docs/database-schema.md`](docs/database-schema.md) |
+| المعمارية التفصيلية | [`docs/architecture.md`](docs/architecture.md) |
+
+---
+
+## Limitations
+
+- تحقق ملكية العميل بالباك اند (`owner_id` من التوكن) قيد المعالجة — راجع قسم Git والتغييرات بالأسفل.
+- لا توجد اختبارات end-to-end/واجهة (Widget/Integration Tests)، فقط اختبارات منطق (Unit Tests).
+- لا يدعم التطبيق حالياً العمل بدون اتصال إنترنت (Offline mode).
+
+## Future Work
+
+- إضافة اختبارات Widget/Integration للشاشات الرئيسية
+- دعم أوضاع دفع/عملات متعددة
+- تحسين الأداء عند عدد كبير من العملاء/العمليات (Pagination)
+
+## License
+
+⚠️ _حدّدوا رخصة المشروع (مثلاً MIT) أو اذكروا أنه مشروع أكاديمي مغلق الاستخدام._
+
+---
+
+## ملاحظة حول تاريخ Git
+
+المستودع يحتوي حالياً commits منفصلة توثّق مراحل معالجة ملاحظات المناقشة، لكن التاريخ الكامل
+للتطوير الأصلي (قبل هذه المرحلة) رُفع بـ commit واحد. إذا كان تاريخ التطوير الفعلي موثّقاً بمكان آخر
+(مستودع محلي/فرع قديم)، يُفضّل الإشارة له بالتقرير، أو توضيح أن سير العمل بالفريق لم يعتمد على Git
+بشكل تدريجي أثناء التطوير الأساسي.
