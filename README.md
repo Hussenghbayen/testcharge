@@ -42,16 +42,8 @@
 
 ---
 
-## صور من التطبيق
 
-| تسجيل الدخول | الرئيسية | كشف حساب عميل |
-|---|---|---|
 | ![login](docs/screenshots/login.png) | ![home](docs/screenshots/home.png) | ![customer](docs/screenshots/customer.png) |
-
-> ⚠️ الصور أعلاه placeholders لحد ما تُضاف سكرين شوتس حقيقية بمجلد `docs/screenshots/` — إذا ما
-> رح تضيفوها بهالمرحلة، احذفوا الجدول واعتمدوا على فيديو العرض فقط.
-
----
 
 ## System Architecture
 
@@ -122,7 +114,6 @@ lib/
 
 ## Installation
 
-```bash
 # 1) استنساخ المستودع
 git clone https://github.com/Hussenghbayen/testcharge.git
 cd testcharge
@@ -173,7 +164,6 @@ FIREBASE_WEB_API_KEY=REPLACE_WITH_YOUR_FIREBASE_WEB_API_KEY
 
 ## Testing
 
-```bash
 flutter test
 ```
 
@@ -201,7 +191,7 @@ flutter test
 
 | العنصر | الرابط |
 |---|---|
-| تقرير التخرج | ⚠️ _أضيفوا الرابط أو الملف هنا_ |
+| تقرير التخرج | ⚠️لملف هنا_ |
 | ملف Figma | https://www.figma.com/design/z7EdLLqHxaxUXPiHqY20FK/Untitled |
 | Postman Collection | [`docs/TestCharge.postman_collection.json`](docs/TestCharge.postman_collection.json) |
 | مخطط قاعدة البيانات | [`docs/database-schema.md`](docs/database-schema.md) |
@@ -222,10 +212,6 @@ flutter test
 - تحسين الأداء عند عدد كبير من العملاء/العمليات (Pagination)
 
 ## License
-
-⚠️ _حدّدوا رخصة المشروع (مثلاً MIT) أو اذكروا أنه مشروع أكاديمي مغلق الاستخدام._
-
----
 
 ## ملاحظة حول تاريخ Git
 
