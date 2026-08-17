@@ -190,7 +190,7 @@ flutter test
 
 | العنصر | الرابط |
 |---|---|
-| تقرير التخرج | ⚠️لملف هنا_ |
+| تقرير التخرج |[ _](https://github.com/Hussenghbayen/testcharge/blob/main/%D8%AA%D9%82%D8%B1%D9%8A%D8%B1_%D9%85%D8%B4%D8%B1%D9%88%D8%B9_%D8%A7%D9%84%D8%AA%D8%AE%D8%B1%D8%AC_%D8%A7%D9%84%D9%86%D8%B3%D8%AE%D8%A9_%D8%A7%D9%84%D9%86%D9%87%D8%A7%D8%A6%D9%8A%D8%A9_%D8%A7%D9%84%D9%83%D8%A7%D9%85%D9%84%D8%A9.pdf) |
 | ملف Figma | https://www.figma.com/design/z7EdLLqHxaxUXPiHqY20FK/Untitled |
 | Postman Collection | [`docs/TestCharge.postman_collection.json`](docs/TestCharge.postman_collection.json) |
 | مخطط قاعدة البيانات | [`docs/database-schema.md`](docs/database-schema.md) |
