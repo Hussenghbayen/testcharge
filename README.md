@@ -43,7 +43,6 @@
 ---
 
 
-| ![login](docs/screenshots/login.png) | ![home](docs/screenshots/home.png) | ![customer](docs/screenshots/customer.png) |
 
 ## System Architecture
 
